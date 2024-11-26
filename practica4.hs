@@ -28,24 +28,14 @@ recorrido (Raiz x izq der) PosOrder = recorrido izq PosOrder ++ recorrido der Po
 -------------------- EJERCICIO 5 --------------------
 niveles :: Arbol a -> [[a]]
 niveles ArbolVacio = []
-niveles arbol = nivelesAux [arbol]
+niveles (Raiz raiz ArbolVacio ArbolVacio) = [[raiz]]
+niveles (Raiz raiz arbolIzquierdo arbolDerecho) = [[raiz]] ++
+	combinarNiveles (niveles arbolIzquierdo) (niveles arbolDerecho)
 
-nivelesAux :: [Arbol a] -> [[a]]
-nivelesAux [] = []
-nivelesAux xs = [obtenerValores xs] ++ nivelesAux (obtenerHijos xs)
-
-obtenerValores :: [Arbol a] -> [a]
-obtenerValores [] = []
-obtenerValores (ArbolVacio:xs) = obtenerValores xs
-obtenerValores ((Raiz valor _ _):xs) = valor : obtenerValores xs
-
-obtenerHijos :: [Arbol a] -> [Arbol a]
-obtenerHijos [] = []
-obtenerHijos (ArbolVacio:xs) = obtenerHijos xs
-obtenerHijos ((Raiz _ izq der):xs) = izq : der : obtenerHijos xs
-
--- Prueba
--- niveles (Raiz 5 (Raiz 3 ArbolVacio ArbolVacio) (Raiz 6 ArbolVacio ArbolVacio))
+combinarNiveles :: [[a]] -> [[a]] -> [[a]]
+combinarNiveles [] ys = ys
+combinarNiveles xs [] = xs
+combinarNiveles (x:xs) (y:ys) = (x ++ y) : combinarNiveles xs ys
 
 -------------------- EJERCICIO 6 --------------------
 minimo :: Arbol a -> a
@@ -57,16 +47,26 @@ maximo (Raiz x _ ArbolVacio) = x
 maximo (Raiz _ _ der) = maximo der
 -------------------- EJERCICIO 8 --------------------
 eliminar :: Ord a => Arbol a -> a -> Arbol a
-eliminar ArbolVacio _ = ArbolVacio
-eliminar (Raiz x izq der) n
-  | n < x     = Raiz x (eliminar izq n) der
-  | n > x     = Raiz x izq (eliminar der n)
-  | n == x    = eliminarRaiz (Raiz x izq der)
-  where
-    eliminarRaiz (Raiz _ ArbolVacio der) = der
-    eliminarRaiz (Raiz _ izq ArbolVacio) = izq
-    eliminarRaiz (Raiz _ izq der)        = Raiz minDer izq (eliminar der minDer)
-      where minDer = minimo der
+eliminar ArbolVacio elemento =
+	error "No se puede eliminar en un árbol vacío."
 
+eliminar (Raiz x ArbolVacio arbolDerecho) elemento =
+	if x == elemento then
+		arbolDerecho
+	else
+		error "El elemento no existe en el árbol."
+
+eliminar (Raiz x arbolIzquierdo ArbolVacio) elemento =
+	if x == elemento then
+		arbolIzquierdo
+	else
+		error "El elemento no existe en el árbol."
+
+eliminar (Raiz x arbolIzquierdo arbolDerecho) elemento =
+	if elemento < x then
+		Raiz x (eliminar arbolIzquierdo elemento) arbolDerecho
+	else if elemento > x then
+		Raiz x arbolIzquierdo (eliminar arbolDerecho elemento)
+	else (Raiz (minimo arbolDerecho) arbolIzquierdo (eliminar arbolDerecho (minimo arbolDerecho)))
 
 
